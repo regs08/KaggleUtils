@@ -1,5 +1,5 @@
 #vis utils. preparing the frame for a grid comparison
-
+import  cv2
 def prepare_images_pred_frames(keys, dataset, predictions, id_to_label, box_annotator):
   """
   getting our image and prediction frames to use in plot images grid
