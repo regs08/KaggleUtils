@@ -3,9 +3,9 @@ import shutil
 import re
 
 """
-  here we build our trainset. we iterate through the train folders dict to obtain
-  the label(key) and the path(value) we then rename all of the annotations to either
-  0 (grape detection) or a unique class id per label (detection and classification)
+  here we build our trainset. we iterate through the list of train folders -label
+  name with two sub folders, images and labels- to move the files to a folder
+  then they will be split into train val and test sets 
 """
 
 class TrainSetBuilder:
@@ -83,16 +83,13 @@ class TrainSetBuilder:
 
     @staticmethod
     def get_train_folders_as_dict(train_folders):
-        folders = []
-        for directory in train_folders:
-            folders.extend([os.path.join(directory, folder) for folder in os.listdir(directory) if folder != '.ipynb_checkpoints'])
+      train_folders_dict = {}
+      for folder in train_folders:
+        if folder != '.ipynb_checkpoints':
+          label = os.path.basename(folder)
+          train_folders_dict[label] = folder
 
-        train_folders_dict = {}
-        for folder in folders:
-            label = os.path.basename(folder)
-            train_folders_dict[label] = folder
-
-        return train_folders_dict
+      return train_folders_dict
 
     @staticmethod
     def remove_numbers(string):
