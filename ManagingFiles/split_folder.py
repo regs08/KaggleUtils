@@ -5,7 +5,7 @@ import shutil
 image_exts = ['.jpg', '.png', '.jpeg']
 
 
-def split_folder_into_train_val_test(ann_folder, image_folder, output_folder, train_ratio=0.8, val_ratio=0.1, test_ratio=0.1):
+def split_folder_into_train_val_test(ann_folder, image_folder, output_folder, train_ratio=0.7, val_ratio=0.2, test_ratio=0.1):
     """
     Splits a folder into train, val, and test subdirectories.
 
