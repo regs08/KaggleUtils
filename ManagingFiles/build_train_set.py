@@ -2,6 +2,7 @@ import os
 import shutil
 import re
 from KaggleUtils.ManagingFiles.split_folder import split_folder_into_train_val_test
+from KaggleUtils.ManagingFiles.write_yaml import write_data_yaml_file
 """
   here we build our trainset. we iterate through the list of train folders -label
   name with two sub folders, images and labels- to move the files to a folder
@@ -17,11 +18,12 @@ class TrainSetBuilder:
         self.image_folder = image_folder
         self.ann_folder = ann_folder
         self.single_class = single_class
-        self.label_to_id_map = self.build_label_id_map()
+        self.label_id_map = self.build_label_id_map()
         self.split_folder=split_folder
+        self.class_labels = list(self.label_id_map.keys())
 
     def build_train_set(self):
-        keys = list(self.label_to_id_map.keys())
+        keys = list(self.label_id_map.keys())
         for folder in self.train_folders_dict:
             print(f"Copying {folder} ann files to {self.ann_folder}...")
             labels_folder = os.path.join(self.train_folders_dict[folder], "labels")
@@ -33,10 +35,10 @@ class TrainSetBuilder:
                 label_key = keys[0]
 
             ann_files = [os.path.join(labels_folder, f) for f in os.listdir(labels_folder) if f.endswith(".txt")]
-            print(f'Found {len(ann_files)} {folder} files\nRenaming class id to {self.label_to_id_map[label_key]}')
+            print(f'Found {len(ann_files)} {folder} files\nRenaming class id to {self.label_id_map[label_key]}')
             for ann_path in ann_files:
                 outpath = os.path.join(self.ann_folder, os.path.basename(ann_path))
-                self.rename_first_element(ann_path, self.label_to_id_map[label_key], outpath)
+                self.rename_first_element(ann_path, self.label_id_map[label_key], outpath)
 
             print(f"Copying {folder} image files to {self.image_folder}...\n")
             images_folder = os.path.join(self.train_folders_dict[folder], "images")
@@ -96,6 +98,9 @@ class TrainSetBuilder:
                                                 val_ratio=val_ratio,
                                                 test_ratio=test_ratio)
 
+    def write_yaml(self, outdir, split_folder=None):
+        write_data_yaml_file(self.class_labels, outdir, dataset_folder=split_folder)
+
     @staticmethod
     def get_train_folders_as_dict(train_folders):
       train_folders_dict = {}
@@ -110,5 +115,6 @@ class TrainSetBuilder:
     def remove_numbers(string):
         result = re.sub(r'\d+', '', string)
         return result
+
 
 
