@@ -12,9 +12,9 @@ def split_folder_into_train_val_test(ann_folder, image_folder, output_folder, tr
     Arguments:
     folder_path -- the path to the folder to split
     output_folder -- the path to the output folder where the train, val, (test) subdirectories will be created
-    train_ratio -- the ratio of files to include in the train subdirectory (default 0.8)
-    val_ratio -- the ratio of files to include in the validation subdirectory (default 0.1)
-    test_ratio -- the ratio of files to include in the test subdirectory (default 0.1)
+    train_ratio -- the ratio of files to include in the train subdirectory
+    val_ratio -- the ratio of files to include in the validation subdirectory
+    test_ratio -- the ratio of files to include in the test subdirectory
     """
     # create output folders
     train_folder, val_folder, test_folder = create_model_train_folder_structure(output_folder)
