@@ -5,7 +5,8 @@ import re
 """
   here we build our trainset. we iterate through the list of train folders -label
   name with two sub folders, images and labels- to move the files to a folder
-  then they will be split into train val and test sets 
+  then they will be split into train val and test sets. images and anns will be 
+  copied to the out folders provided in the constructor
 """
 
 class TrainSetBuilder:
