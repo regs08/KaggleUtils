@@ -1,13 +1,14 @@
 import os
 import shutil
 import re
-
+from KaggleUtils.ManagingFiles.split_folder import split_folder_into_train_val_test
 """
   here we build our trainset. we iterate through the list of train folders -label
   name with two sub folders, images and labels- to move the files to a folder
   then they will be split into train val and test sets. images and anns will be 
   copied to the out folders provided in the constructor
 """
+
 
 class TrainSetBuilder:
     def __init__(self, train_folders, image_folder, ann_folder, single_class=None):
@@ -81,6 +82,11 @@ class TrainSetBuilder:
             label_id_map[key] = index
 
         return label_id_map
+
+    def split(self, outfolder):
+        return split_folder_into_train_val_test(image_folder=self.image_folder,
+                                         ann_folder=self.ann_folder,
+                                         output_folder=outfolder)
 
     @staticmethod
     def get_train_folders_as_dict(train_folders):
