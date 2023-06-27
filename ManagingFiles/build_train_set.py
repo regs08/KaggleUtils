@@ -11,13 +11,14 @@ from KaggleUtils.ManagingFiles.split_folder import split_folder_into_train_val_t
 
 
 class TrainSetBuilder:
-    def __init__(self, train_folders, image_folder, ann_folder, single_class=None):
+    def __init__(self, train_folders, image_folder, ann_folder, single_class=None, split_folder=None):
 
         self.train_folders_dict = self.get_train_folders_as_dict(train_folders)
         self.image_folder = image_folder
         self.ann_folder = ann_folder
         self.single_class = single_class
         self.label_to_id_map = self.build_label_id_map()
+        self.split_folder=split_folder
 
     def build_train_set(self):
         keys = list(self.label_to_id_map.keys())
@@ -83,10 +84,17 @@ class TrainSetBuilder:
 
         return label_id_map
 
-    def split(self, outfolder):
+    def split(self, split_folder=None, train_ratio=.7, val_ratio=.2, test_ratio=.1):
+        if not split_folder:
+            split_folder=self.split_folder
+        assert os.path.exists(split_folder), 'Invalid split folder passed'
+
         return split_folder_into_train_val_test(image_folder=self.image_folder,
-                                         ann_folder=self.ann_folder,
-                                         output_folder=outfolder)
+                                                ann_folder=self.ann_folder,
+                                                output_folder=split_folder,
+                                                train_ratio=train_ratio,
+                                                val_ratio=val_ratio,
+                                                test_ratio=test_ratio)
 
     @staticmethod
     def get_train_folders_as_dict(train_folders):
