@@ -2,7 +2,7 @@ import os
 import shutil
 
 
-def build_train_set(train_folders_dict, image_folder, label_folder, label_to_id_map):
+def build_train_set(train_folders_dict, image_folder, ann_folder, label_to_id_map):
   """
   here we build our trainset. we iterate through the train folders dict to obtain
   the label(key) and the path(value) we then rename all of the annotations to either
@@ -11,7 +11,7 @@ def build_train_set(train_folders_dict, image_folder, label_folder, label_to_id_
   image_paths = []
 
   for label in train_folders_dict:
-      print(f"Moving {label} ann files to {label_folder}...")
+      print(f"Moving {label} ann files to {ann_folder}...")
       labels_folder = os.path.join(train_folders_dict[label], "labels")
       assert os.path.isdir(labels_folder), f'Invalid folder \n {labels_folder}'
 
@@ -20,7 +20,7 @@ def build_train_set(train_folders_dict, image_folder, label_folder, label_to_id_
       #change the class id for the files.by default they are all 0
       print(f'Found {len(ann_files)} {label} files\nRenaming class id to {label_to_id_map[label]}')
       for ann_path in ann_files:
-        outpath=os.path.join(label_folder, os.path.basename(ann_path))
+        outpath=os.path.join(ann_folder, os.path.basename(ann_path))
         rename_first_element(ann_path, label_to_id_map[label], outpath)
 
       print(f"Copying {label} image files to {image_folder}...")
