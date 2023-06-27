@@ -19,6 +19,8 @@ class TrainSetBuilder:
         self.ann_folder = ann_folder
         self.single_class = single_class
         self.label_id_map = self.build_label_id_map()
+        self.id_label_map = {value: key for key, value in self.label_id_map.items()}
+
         self.split_folder=split_folder
         self.class_labels = list(self.label_id_map.keys())
 
