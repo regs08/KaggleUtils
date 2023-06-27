@@ -99,7 +99,13 @@ class TrainSetBuilder:
                                                 test_ratio=test_ratio)
 
     def write_yaml(self, outdir, split_folder=None):
-        write_data_yaml_file(self.class_labels, outdir, dataset_folder=split_folder)
+        """
+        returns the path to yaml
+        :param outdir: save dir
+        :param split_folder: where our train/val/test default is None
+        :return:
+        """
+        return write_data_yaml_file(self.class_labels, outdir, dataset_folder=split_folder)
 
     @staticmethod
     def get_train_folders_as_dict(train_folders):
