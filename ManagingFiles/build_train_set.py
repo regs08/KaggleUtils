@@ -3,6 +3,8 @@ import shutil
 import re
 from KaggleUtils.ManagingFiles.split_folder import split_folder_into_train_val_test
 from KaggleUtils.ManagingFiles.write_yaml import write_data_yaml_file
+
+
 """
   here we build our trainset. we iterate through the list of train folders -label
   name with two sub folders, images and labels- to move the files to a folder
@@ -14,7 +16,7 @@ from KaggleUtils.ManagingFiles.write_yaml import write_data_yaml_file
 class TrainSetBuilder:
     def __init__(self, train_folders, image_folder, ann_folder, single_class=None, split_folder=None):
 
-        self.train_folders_dict = self.get_train_folders_as_dict(train_folders)
+        self.label_path_map = self.get_label_path_map(train_folders)
         self.image_folder = image_folder
         self.ann_folder = ann_folder
         self.single_class = single_class
@@ -26,9 +28,9 @@ class TrainSetBuilder:
 
     def build_train_set(self):
         keys = list(self.label_id_map.keys())
-        for folder in self.train_folders_dict:
+        for folder in self.label_path_map:
             print(f"Copying {folder} ann files to {self.ann_folder}...")
-            labels_folder = os.path.join(self.train_folders_dict[folder], "labels")
+            labels_folder = os.path.join(self.label_path_map[folder], "labels")
             assert os.path.isdir(labels_folder), f'Invalid folder \n {labels_folder}'
 
             if len(keys) > 1:
@@ -43,7 +45,7 @@ class TrainSetBuilder:
                 self.rename_first_element(ann_path, self.label_id_map[label_key], outpath)
 
             print(f"Copying {folder} image files to {self.image_folder}...\n")
-            images_folder = os.path.join(self.train_folders_dict[folder], "images")
+            images_folder = os.path.join(self.label_path_map[folder], "images")
             assert os.path.isdir(images_folder), f'Invalid folder \n {images_folder}'
 
             for f in os.listdir(images_folder):
@@ -74,7 +76,7 @@ class TrainSetBuilder:
         - label_id_map: Dictionary containing the label-to-ID mapping.
         """
         label_id_map = {}
-        for index, folder_label in enumerate(self.train_folders_dict):
+        for index, folder_label in enumerate(self.label_path_map):
             if self.single_class:
                 label_id_map[self.single_class] = 0
             else:
@@ -110,7 +112,7 @@ class TrainSetBuilder:
         return write_data_yaml_file(self.class_labels, outdir, dataset_folder=split_folder)
 
     @staticmethod
-    def get_train_folders_as_dict(train_folders):
+    def get_label_path_map(train_folders):
       train_folders_dict = {}
       for folder in train_folders:
         if folder != '.ipynb_checkpoints':
