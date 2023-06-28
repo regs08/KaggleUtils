@@ -1,5 +1,10 @@
 #vis utils. preparing the frame for a grid comparison
 
+import random
+import supervision as sv
+import cv2
+from matplotlib import pyplot as plt
+
 
 def prepare_images_pred_frames(keys, dataset, predictions, id_to_label, box_annotator):
   """
@@ -28,3 +33,28 @@ def prepare_images_pred_frames(keys, dataset, predictions, id_to_label, box_anno
       images.append(frame_with_predictions)
       titles.append('predictions')
   return images, titles
+
+
+def plot_rand_img_from_dataset_with_sv(ds, id_label_map, box_annotator=False, seed=None, size=(10, 10)):
+    # getting a random key
+    if seed:
+        random.seed(seed)
+    RAND_IMG = random.sample(list(ds.images.keys()), 1)[0]
+    print(f'Random image filename: {RAND_IMG}')
+
+    # default box_annotator
+    if not box_annotator:
+        box_annotator = sv.BoxAnnotator(thickness=5,
+                                        color=sv.Color(255, 0, 0),
+                                        text_scale=1.0,
+                                        text_thickness=2)
+    # labels of the image
+    labels = [id_label_map[id] for id in ds.annotations[RAND_IMG].class_id]
+
+    frame = box_annotator.annotate(
+        scene=ds.images[RAND_IMG].copy(),
+        detections=ds.annotations[RAND_IMG],
+        labels=labels)
+
+    plt.figure(figsize=size)
+    plt.imshow(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
