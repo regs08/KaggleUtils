@@ -1,5 +1,6 @@
 #vis utils. preparing the frame for a grid comparison
-import  cv2
+
+
 def prepare_images_pred_frames(keys, dataset, predictions, id_to_label, box_annotator):
   """
   getting our image and prediction frames to use in plot images grid
@@ -11,7 +12,7 @@ def prepare_images_pred_frames(keys, dataset, predictions, id_to_label, box_anno
       gt_labels = [id_to_label[id] for id in current_ann.class_id]
 
       frame_with_annotations = box_annotator.annotate(
-          scene=cv2.cvtColor(dataset.images[key].copy(), cv2.COLOR_BGR2RGB),
+          scene=dataset.images[key].copy(),
           detections=current_ann,
           labels=gt_labels
       )
@@ -20,7 +21,7 @@ def prepare_images_pred_frames(keys, dataset, predictions, id_to_label, box_anno
       current_pred = predictions[key]
       pred_labels=[id_to_label[id] for id in current_pred.class_id]
       frame_with_predictions = box_annotator.annotate(
-          scene=cv2.cvtColor(dataset.images[key].copy(), cv2.COLOR_BGR2RGB),
+          scene=dataset.images[key].copy(),
           detections= current_pred,
           labels=pred_labels
       )
