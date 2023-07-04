@@ -3,70 +3,85 @@ import shutil
 import re
 from KaggleUtils.ManagingFiles.split_folder import split_folder_into_train_val_test
 from KaggleUtils.ManagingFiles.write_yaml import write_data_yaml_file
+import random
 
-
+IMAGE_EXTS=(".jpg", ".jpeg", ".png")
 """
   here we build our trainset. we iterate through the list of train folders -label
   name with two sub folders, images and labels- to move the files to a folder
-  then they will be split into train val and test sets. images and anns will be 
+  then they will be split into train val and test sets. images and anns will be
   copied to the out folders provided in the constructor
 """
 
 
 class TrainSetBuilder:
-    def __init__(self, train_folders, image_folder, ann_folder, single_class=None, split_folder=None):
+    def __init__(self, train_folders, image_folder, ann_folder, single_class=None, split_folder=None, seed=42):
 
         self.label_path_map = self.get_label_path_map(train_folders)
-        self.image_folder = image_folder
-        self.ann_folder = ann_folder
+        self.image_out_folder = image_folder
+        self.ann_out_folder = ann_folder
         self.single_class = single_class
         self.label_id_map = self.build_label_id_map()
         self.id_label_map = {value: key for key, value in self.label_id_map.items()}
 
         self.split_folder=split_folder
         self.class_labels = list(self.label_id_map.keys())
+        random.seed(seed)
 
-    def build_train_set(self):
+    def build_train_set(self, subset=None):
+        """
+        iterates through our data and copies images and labels into a folder where they can besplit into a train-set
+        :param subset: toggle if you just want
+        :return:
+        """
         keys = list(self.label_id_map.keys())
         for folder in self.label_path_map:
-            print(f"Copying {folder} ann files to {self.ann_folder}...")
+            #print(f"Copying {folder} ann files to {self.ann_out_folder}...")
             labels_folder = os.path.join(self.label_path_map[folder], "labels")
-            assert os.path.isdir(labels_folder), f'Invalid folder \n {labels_folder}'
-
-            if len(keys) > 1:
-                label_key = self.remove_numbers(folder)
-            else:
-                label_key = keys[0]
-
-            ann_files = [os.path.join(labels_folder, f) for f in os.listdir(labels_folder) if f.endswith(".txt")]
-            print(f'Found {len(ann_files)} {folder} files\nRenaming class id to {self.label_id_map[label_key]}')
-            for ann_path in ann_files:
-                outpath = os.path.join(self.ann_folder, os.path.basename(ann_path))
-                self.rename_first_element(ann_path, self.label_id_map[label_key], outpath)
-
-            print(f"Copying {folder} image files to {self.image_folder}...\n")
             images_folder = os.path.join(self.label_path_map[folder], "images")
-            assert os.path.isdir(images_folder), f'Invalid folder \n {images_folder}'
 
-            for f in os.listdir(images_folder):
-                if f.endswith((".jpg", ".jpeg", ".png", ".gif")):
-                    img_file = os.path.join(images_folder, f)
-                    dest = os.path.join(self.image_folder, f)
-                    shutil.copy(img_file, dest)
+            #gets image and label paths, toggle subset param for random subset from each folder
+            image_file_paths, label_file_paths = self.get_image_and_label_paths(images_folder,
+                                                                                labels_folder,
+                                                                                subset=subset)
+            #rename and copy label files
+            self.rename_copy_label_files(label_file_paths, folder, keys)
 
-    def rename_first_element(self, txt_file, class_id, output_path):
-        with open(txt_file, 'r') as file:
-            lines = file.readlines()
+            #copy_image_files
+            self.copy_image_paths(image_file_paths, folder)
 
-        renamed_lines = []
-        for line in lines:
-            elements = line.strip().split()
-            if elements:
-                elements[0] = str(class_id)
-                renamed_lines.append(' '.join(elements))
+    def copy_image_paths(self, image_file_paths, current_folder):
+      print(f"\nCopying {len(image_file_paths)} {current_folder} image files to {self.image_out_folder}...\n")
 
-        with open(output_path, 'w') as file:
-            file.write('\n'.join(renamed_lines))
+      for img_path in image_file_paths:
+        dest = os.path.join(self.image_out_folder, os.path.basename(img_path))
+        shutil.copy(img_path, dest)
+
+    def get_image_and_label_paths(self, images_folder, labels_folder, subset=None):
+
+      label_file_paths = [os.path.join(labels_folder, f)
+        for f in os.listdir(labels_folder) if f.endswith(".txt")]
+
+      image_file_paths = [os.path.join(images_folder, f)
+        for f in os.listdir(images_folder) if f.endswith(IMAGE_EXTS)]
+
+      if subset:
+        image_file_paths, label_file_paths  = self.get_random_pairs(image_file_paths, labels_folder, subset)
+
+      return image_file_paths, label_file_paths
+
+    def rename_copy_label_files(self, label_file_paths, current_folder, keys):
+      #copy files
+      if len(keys) > 1:
+          label_key = self.remove_numbers(current_folder)
+      else:
+          label_key = keys[0]
+      print(f'Found {len(label_file_paths)} {current_folder} files'
+            f'\nRenaming class id to {self.label_id_map[label_key]}\n'
+            f'copying to {self.ann_out_folder}')
+      for label_path in label_file_paths:
+          outpath = os.path.join(self.ann_out_folder, os.path.basename(label_path))
+          self.rename_first_element(label_path, self.label_id_map[label_key], outpath)
 
     def build_label_id_map(self):
         """
@@ -95,8 +110,8 @@ class TrainSetBuilder:
             split_folder=self.split_folder
         assert os.path.exists(split_folder), 'Invalid split folder passed'
 
-        return split_folder_into_train_val_test(image_folder=self.image_folder,
-                                                ann_folder=self.ann_folder,
+        return split_folder_into_train_val_test(image_folder=self.image_out_folder,
+                                                ann_folder=self.ann_out_folder,
                                                 output_folder=split_folder,
                                                 train_ratio=train_ratio,
                                                 val_ratio=val_ratio,
@@ -110,6 +125,21 @@ class TrainSetBuilder:
         :return:
         """
         return write_data_yaml_file(self.class_labels, outdir, dataset_folder=split_folder)
+
+    @staticmethod
+    def rename_first_element(txt_file, class_id, output_path):
+        with open(txt_file, 'r') as file:
+            lines = file.readlines()
+
+        renamed_lines = []
+        for line in lines:
+            elements = line.strip().split()
+            if elements:
+                elements[0] = str(class_id)
+                renamed_lines.append(' '.join(elements))
+
+        with open(output_path, 'w') as file:
+            file.write('\n'.join(renamed_lines))
 
     @staticmethod
     def get_label_path_map(train_folders):
@@ -127,4 +157,29 @@ class TrainSetBuilder:
         return result
 
 
+    #get a random image file, then check to see if its in the label folder
+    @staticmethod
+    def get_random_pairs(image_files, label_folder, subset):
+
+        # if not image_files or not ann_files:
+        #     print("One or both folders do not contain any files of the required type.")
+        #     return []
+
+        valid_img_files=[]
+        valid_ann_files=[]
+        attempts = 0
+
+        while len(valid_img_files) < subset and attempts < 100:  # Limit the number of attempts to avoid infinite loops
+            img_file = random.choice(image_files)
+            #remove ext
+            filename = os.path.splitext(os.path.basename(img_file))[0]
+            label_file_path = os.path.join(label_folder, filename + '.txt')
+            if os.path.exists(img_file) and os.path.exists(label_file_path):
+              if img_file not in valid_img_files:
+                valid_img_files.append(img_file)
+                valid_ann_files.append(label_file_path)
+
+            attempts += 1
+
+        return valid_img_files, valid_ann_files
 
