@@ -79,7 +79,7 @@ class TrainSetBuilder:
           label_key = keys[0]
       print(f'Found {len(label_file_paths)} {current_folder} files'
             f'\nRenaming class id to {self.label_id_map[label_key]}\n'
-            f'copying to {self.ann_out_folder}#####')
+            f'copying to {self.ann_out_folder}')
       for label_path in label_file_paths:
           outpath = os.path.join(self.ann_out_folder, os.path.basename(label_path))
           self.rename_first_element(label_path, self.label_id_map[label_key], outpath)
