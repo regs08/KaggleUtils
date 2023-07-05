@@ -16,16 +16,17 @@ IMAGE_EXTS=(".jpg", ".jpeg", ".png")
 
 class TrainSetBuilder:
     def __init__(self, train_folders, out_folder, single_class=None, split_folder=None, seed=42):
-
-        self.label_path_map = self.get_label_path_map(train_folders)
+        self.train_folders = train_folders
         self.out_folder = out_folder
+        self.single_class = single_class
+        self.split_folder = split_folder
+
         self.image_out_folder = os.path.join(out_folder, 'images')
         self.ann_out_folder = os.path.join(out_folder, 'labels')
-        self.single_class = single_class
+
         self.label_id_map = self.build_label_id_map()
         self.id_label_map = {value: key for key, value in self.label_id_map.items()}
-
-        self.split_folder = split_folder
+        self.label_path_map = self.get_label_path_map(train_folders)
         self.class_labels = list(self.label_id_map.keys())
         random.seed(seed)
 
@@ -77,9 +78,11 @@ class TrainSetBuilder:
           label_key = self.remove_numbers(current_folder)
       else:
           label_key = keys[0]
+
       print(f'#####\nFound {len(label_file_paths)} {current_folder} files'
             f'\nRenaming class id to {self.label_id_map[label_key]}\n'
             f'copying to {self.ann_out_folder}')
+
       for label_path in label_file_paths:
           outpath = os.path.join(self.ann_out_folder, os.path.basename(label_path))
           self.rename_first_element(label_path, self.label_id_map[label_key], outpath)
