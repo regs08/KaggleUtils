@@ -23,10 +23,10 @@ class TrainSetBuilder:
 
         self.image_out_folder = os.path.join(out_folder, 'images')
         self.ann_out_folder = os.path.join(out_folder, 'labels')
+        self.label_path_map = self.get_label_path_map(train_folders)
 
         self.label_id_map = self.build_label_id_map()
         self.id_label_map = {value: key for key, value in self.label_id_map.items()}
-        self.label_path_map = self.get_label_path_map(train_folders)
         self.class_labels = list(self.label_id_map.keys())
         random.seed(seed)
 
