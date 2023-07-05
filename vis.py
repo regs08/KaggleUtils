@@ -58,3 +58,29 @@ def plot_rand_img_from_dataset_with_sv(ds, id_label_map, box_annotator=False, se
 
     plt.figure(figsize=size)
     plt.imshow(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+
+
+def annotate_mask(ds, img_name, id_label_map, mask_annotator=None, box_annotator=None):
+    """
+
+    :param img_name: basename of the iamge file
+    :param mask_annotator: annotator helper from supervision. default values are provided
+    :param box_annotator: annotator helper from supervision. default values are provided
+    :return: np array with our mask/box annotations
+    """
+    if not mask_annotator:
+        mask_annotator = sv.MaskAnnotator()
+    if not box_annotator:
+        box_annotator = sv.BoxAnnotator(thickness=5, text_scale=1.0, text_thickness=2)
+
+    frame_with_boxes = box_annotator.annotate(
+        scene=ds.images[img_name].copy(),
+        detections=ds.annotations[img_name],
+        labels=[id_label_map[id] for id in ds.annotations[img_name].class_id]
+    )
+
+    frame = mask_annotator.annotate(
+        scene=frame_with_boxes,
+        detections=ds.annotations[img_name]
+    )
+    return frame
