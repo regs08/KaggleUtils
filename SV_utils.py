@@ -1,5 +1,7 @@
 #viewing predictions on test set
 import supervision as sv
+import os
+
 
 #vis util
 def annotate_frame(box_annotator, dataset, key, labels=None):
@@ -61,12 +63,24 @@ def get_predictions_from_nas(dataset, model, conf, iou):
   return predictions
 
 
-def get_predictions_from_ultra(dataset, model, conf, iou, image_folder):
+def get_predictions_from_ultra(dataset, model,image_folder,  conf=0.5, iou=0.5):
+    """
+    Note in kaggle notebookes i was having very poor accuracy when predicting from np arr. having source
+    equal to the image path seemded to fix this
+
+    gets predictions as sv.Detection objects from a dataset
+    :param dataset: sv.DetectionDataset
+    :param model: model we use to predict
+    :param conf: confidence thresh
+    :param iou: iou thresh
+    :param image_folder: where our images are stored
+    :return: dict[str]: detections
+    """
     predictions = {}
 
     for image_name, image in dataset.images.items():
-      #image_path = os.path.join(image_folder, image_name)
-      result = list(model.predict(source=image, conf=conf, iou=iou))[0]
+      image_path = os.path.join(image_folder, image_name)
+      result = list(model.predict(source=image_path, conf=conf, iou=iou))[0]
       detections = sv.Detections.from_yolov8(result)
       predictions[image_name] = detections
 
