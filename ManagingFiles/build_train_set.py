@@ -52,7 +52,7 @@ class TrainSetBuilder:
             self.copy_image_paths(image_file_paths, folder)
 
     def copy_image_paths(self, image_file_paths, current_folder):
-      print(f"#####\nCopying {len(image_file_paths)} {current_folder} image files to {self.image_out_folder}...")
+      print(f"Copying {len(image_file_paths)} {current_folder} image files to {self.image_out_folder}...\n#####")
 
       for img_path in image_file_paths:
         dest = os.path.join(self.image_out_folder, os.path.basename(img_path))
@@ -77,7 +77,7 @@ class TrainSetBuilder:
           label_key = self.remove_numbers(current_folder)
       else:
           label_key = keys[0]
-      print(f'Found {len(label_file_paths)} {current_folder} files'
+      print(f'#####\nFound {len(label_file_paths)} {current_folder} files'
             f'\nRenaming class id to {self.label_id_map[label_key]}\n'
             f'copying to {self.ann_out_folder}')
       for label_path in label_file_paths:
