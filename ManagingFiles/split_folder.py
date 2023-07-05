@@ -40,7 +40,7 @@ def split_folder_into_train_val_test(ann_folder, image_folder, output_folder, tr
             label_file = file + '.txt'
             src_path = os.path.join(ann_folder, label_file)
             dst_path = os.path.join(folder_name, 'labels', label_file)
-            shutil.move(src_path, dst_path)
+            shutil.copy(src_path, dst_path)
 
             # move image file
             for ext in image_exts:
@@ -48,7 +48,7 @@ def split_folder_into_train_val_test(ann_folder, image_folder, output_folder, tr
                 src_path = os.path.join(image_folder, image_file)
                 if os.path.exists(src_path):
                     dst_path = os.path.join(folder_name, 'images', image_file)
-                    shutil.move(src_path, dst_path)
+                    shutil.copy(src_path, dst_path)
                     break  # break out of loop once the image is found and moved
 
     return train_folder, val_folder, test_folder
