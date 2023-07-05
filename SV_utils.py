@@ -67,10 +67,7 @@ def get_predictions_from_ultra(dataset, model, conf, iou, image_folder):
     for image_name, image in dataset.images.items():
       #image_path = os.path.join(image_folder, image_name)
       result = list(model.predict(source=image, conf=conf, iou=iou))[0]
-      detections = sv.Detections(
-          xyxy=result.boxes.xyxy.cpu().numpy(),
-          confidence=result.boxes.conf.cpu().numpy(),
-          class_id=result.boxes.cls.cpu().numpy().astype(int)
-      )
+      detections = sv.Detections.from_yolov8(result)
       predictions[image_name] = detections
+
     return predictions
