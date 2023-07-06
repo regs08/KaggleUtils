@@ -121,14 +121,14 @@ class TrainSetBuilder:
                                                 val_ratio=val_ratio,
                                                 test_ratio=test_ratio)
 
-    def write_yaml(self, outdir, split_folder=None):
+    def write_yaml(self, outdir, dataset_folder=None):
         """
         returns the path to yaml
         :param outdir: save dir
         :param split_folder: where our train/val/test default is None
         :return:
         """
-        return write_data_yaml_file(self.class_labels, outdir, dataset_folder=split_folder)
+        return write_data_yaml_file(self.class_labels, outdir, dataset_folder=dataset_folder)
 
     @staticmethod
     def rename_first_element(txt_file, class_id, output_path):
