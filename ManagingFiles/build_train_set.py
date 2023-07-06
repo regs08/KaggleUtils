@@ -15,14 +15,14 @@ IMAGE_EXTS=(".jpg", ".jpeg", ".png")
 
 
 class TrainSetBuilder:
-    def __init__(self, train_folders, out_folder, single_class=None, split_folder=None, seed=42):
+    def __init__(self, train_folders, temp_outfolder, single_class=None, split_folder=None, seed=42):
         self.train_folders = train_folders
-        self.out_folder = out_folder
+        self.out_folder = temp_outfolder
         self.single_class = single_class
         self.split_folder = split_folder
 
-        self.image_out_folder = os.path.join(out_folder, 'images')
-        self.ann_out_folder = os.path.join(out_folder, 'labels')
+        self.image_out_folder = os.path.join(temp_outfolder, 'images')
+        self.ann_out_folder = os.path.join(temp_outfolder, 'labels')
         self.label_path_map = self.get_label_path_map(train_folders)
 
         self.label_id_map = self.build_label_id_map()
