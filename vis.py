@@ -6,7 +6,7 @@ import cv2
 from matplotlib import pyplot as plt
 
 
-def prepare_images_pred_frames(keys, dataset, predictions, id_to_label, box_annotator):
+def prepare_images_pred_frames(keys, dataset, predictions, id_to_label, box_annotator, apply_mask=False):
   """
   getting our image and prediction frames to use in plot images grid
   """
@@ -21,15 +21,30 @@ def prepare_images_pred_frames(keys, dataset, predictions, id_to_label, box_anno
           detections=current_ann,
           labels=gt_labels
       )
+
+      if apply_mask:
+          mask_annotator = sv.MaskAnnotator()
+          frame_with_annotations = mask_annotator.annotate(
+              scene=frame_with_annotations,
+              detections=current_ann
+          )
       images.append(frame_with_annotations)
       titles.append('annotations')
       current_pred = predictions[key]
       pred_labels=[id_to_label[id] for id in current_pred.class_id]
+
+
       frame_with_predictions = box_annotator.annotate(
           scene=dataset.images[key].copy(),
           detections= current_pred,
           labels=pred_labels
       )
+      if apply_mask:
+          mask_annotator = sv.MaskAnnotator()
+          frame_with_predictions = mask_annotator.annotate(
+              scene=frame_with_predictions,
+              detections=current_pred
+          )
       images.append(frame_with_predictions)
       titles.append('predictions')
   return images, titles
