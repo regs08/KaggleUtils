@@ -7,49 +7,52 @@ from matplotlib import pyplot as plt
 
 
 def prepare_images_pred_frames(keys, dataset, predictions, id_to_label, box_annotator, apply_mask=False):
-  """
-  getting our image and prediction frames to use in plot images grid
-  """
-  images = []
-  titles = []
-  for key in keys:
-    current_ann=dataset.annotations[key]
-    gt_labels = [id_to_label[id] for id in current_ann.class_id]
+    """
+    getting our image and prediction frames to use in plot images grid
+    """
+    images = []
+    titles = []
+    print(apply_mask)
+    for key in keys:
+        current_ann = dataset.annotations[key]
+        gt_labels = [id_to_label[id] for id in current_ann.class_id]
 
+        frame_with_annotations = box_annotator.annotate(
+            scene=dataset.images[key].copy(),
+            detections=current_ann,
+            labels=gt_labels
+        )
 
-    frame_with_annotations = box_annotator.annotate(
-      scene=dataset.images[key].copy(),
-      detections=current_ann,
-      labels=gt_labels
-    )
+        if apply_mask:
+            mask_annotator = sv.MaskAnnotator()
+            frame_with_annotations = mask_annotator.annotate(
+                scene=frame_with_annotations,
+                detections=current_ann
+            )
+        images.append(frame_with_annotations)
+        titles.append('annotations')
+        current_pred = predictions[key]
 
-    if apply_mask:
-      mask_annotator = sv.MaskAnnotator()
-      frame_with_annotations = mask_annotator.annotate(
-          scene=frame_with_annotations,
-          detections=current_ann
-      )
-    images.append(frame_with_annotations)
-    titles.append('annotations')
-    current_pred = predictions[key]
-    pred_labels=[id_to_label[id] for id in current_pred.class_id]
-    pred_labels = [f"{id_to_label[class_id]} {conf:0.2f}" for _, _, conf, class_id, _ in
-                 current_ann]
+        pred_labels = [f"{id_to_label[class_id]} {conf:0.2f}"
+                       for _, _, conf, class_id, _ in current_pred]
+        # pred_labels=[id_to_label[id] for id in current_pred.class_id]
 
-    frame_with_predictions = box_annotator.annotate(
-      scene=dataset.images[key].copy(),
-      detections= current_pred,
-      labels=pred_labels
-    )
-    if apply_mask:
-      mask_annotator = sv.MaskAnnotator()
-      frame_with_predictions = mask_annotator.annotate(
-          scene=frame_with_predictions,
-          detections=current_pred
-          )
-    images.append(frame_with_predictions)
-    titles.append('predictions')
-  return images, titles
+        frame_with_predictions = box_annotator.annotate(
+            scene=dataset.images[key].copy(),
+            detections=current_pred,
+            labels=pred_labels
+        )
+
+        if apply_mask:
+            mask_annotator = sv.MaskAnnotator()
+            frame_with_predictions = mask_annotator.annotate(
+                scene=frame_with_predictions,
+                detections=current_pred
+            )
+
+        images.append(frame_with_predictions)
+        titles.append('predictions')
+    return images, titles
 
 
 def plot_rand_img_from_dataset_with_sv(ds, id_label_map, box_annotator=False, seed=None, size=(10, 10)):
@@ -101,3 +104,34 @@ def annotate_mask(ds, img_name, id_label_map, mask_annotator=None, box_annotator
         detections=ds.annotations[img_name]
     )
     return frame
+
+
+def get_gt_pred_grid(ds, preds, id_label_map, apply_mask=False, seed=1, keys=None):
+    """
+
+    :param ds:
+    :param preds:
+    :param id_label_map:
+    :param apply_mask:
+    :return:
+    """
+    if not keys:
+        random.seed(seed)
+
+        MAX_IMAGE_COUNT = 1
+        n = min(MAX_IMAGE_COUNT, len(ds.images))
+        keys = list(ds.images.keys())
+        keys = random.sample(keys, n)
+
+    #plotting preds plots GT first then the pred image below
+    box_annotator = sv.BoxAnnotator(thickness=5,
+                                    text_scale=1.0,
+                                    text_thickness=2)
+
+    images, titles = prepare_images_pred_frames(keys=keys,
+                                                dataset=ds,
+                                                predictions=preds,
+                                                id_to_label=id_label_map,
+                                                box_annotator=box_annotator,
+                                               apply_mask=apply_mask)
+    return images, titles
