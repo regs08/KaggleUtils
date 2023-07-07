@@ -63,7 +63,7 @@ def get_predictions_from_nas(dataset, model, conf, iou):
   return predictions
 
 
-def get_predictions_from_ultra(dataset, model,image_folder,  conf=0.5, iou=0.5):
+def get_predictions_from_ultra(dataset, model, image_folder, conf=0.5, iou=0.5):
     """
     Note in kaggle notebookes i was having very poor accuracy when predicting from np arr. having source
     equal to the image path seemded to fix this
