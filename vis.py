@@ -13,40 +13,42 @@ def prepare_images_pred_frames(keys, dataset, predictions, id_to_label, box_anno
   images = []
   titles = []
   for key in keys:
-      current_ann=dataset.annotations[key]
-      gt_labels = [id_to_label[id] for id in current_ann.class_id]
+    current_ann=dataset.annotations[key]
+    gt_labels = [id_to_label[id] for id in current_ann.class_id]
 
-      frame_with_annotations = box_annotator.annotate(
-          scene=dataset.images[key].copy(),
-          detections=current_ann,
-          labels=gt_labels
+
+    frame_with_annotations = box_annotator.annotate(
+      scene=dataset.images[key].copy(),
+      detections=current_ann,
+      labels=gt_labels
+    )
+
+    if apply_mask:
+      mask_annotator = sv.MaskAnnotator()
+      frame_with_annotations = mask_annotator.annotate(
+          scene=frame_with_annotations,
+          detections=current_ann
       )
+    images.append(frame_with_annotations)
+    titles.append('annotations')
+    current_pred = predictions[key]
+    pred_labels=[id_to_label[id] for id in current_pred.class_id]
+    pred_labels = [f"{id_to_label[class_id]} {conf:0.2f}" for _, _, conf, class_id, _ in
+                 current_ann]
 
-      if apply_mask:
-          mask_annotator = sv.MaskAnnotator()
-          frame_with_annotations = mask_annotator.annotate(
-              scene=frame_with_annotations,
-              detections=current_ann
+    frame_with_predictions = box_annotator.annotate(
+      scene=dataset.images[key].copy(),
+      detections= current_pred,
+      labels=pred_labels
+    )
+    if apply_mask:
+      mask_annotator = sv.MaskAnnotator()
+      frame_with_predictions = mask_annotator.annotate(
+          scene=frame_with_predictions,
+          detections=current_pred
           )
-      images.append(frame_with_annotations)
-      titles.append('annotations')
-      current_pred = predictions[key]
-      pred_labels=[id_to_label[id] for id in current_pred.class_id]
-
-
-      frame_with_predictions = box_annotator.annotate(
-          scene=dataset.images[key].copy(),
-          detections= current_pred,
-          labels=pred_labels
-      )
-      if apply_mask:
-          mask_annotator = sv.MaskAnnotator()
-          frame_with_predictions = mask_annotator.annotate(
-              scene=frame_with_predictions,
-              detections=current_pred
-          )
-      images.append(frame_with_predictions)
-      titles.append('predictions')
+    images.append(frame_with_predictions)
+    titles.append('predictions')
   return images, titles
 
 
