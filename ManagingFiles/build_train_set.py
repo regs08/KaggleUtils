@@ -15,19 +15,18 @@ IMAGE_EXTS=(".jpg", ".jpeg", ".png")
 
 
 class TrainSetBuilder:
-    def __init__(self, train_folders, temp_outfolder, single_class=None, split_folder=None, seed=42):
+    def __init__(self, train_folders, temp_outfolder, classes, split_folder=None, seed=42):
         self.train_folders = train_folders
         self.out_folder = temp_outfolder
-        self.single_class = single_class
         self.split_folder = split_folder
+        self.classes = classes
 
         self.image_out_folder = os.path.join(temp_outfolder, 'images')
         self.ann_out_folder = os.path.join(temp_outfolder, 'labels')
-        self.label_path_map = self.get_label_path_map(train_folders)
+        self.label_path_map = self.get_label_path_map()
 
-        self.label_id_map = self.build_label_id_map()
-        self.id_label_map = {value: key for key, value in self.label_id_map.items()}
-        self.class_labels = list(self.label_id_map.keys())
+        self.label_id_map = self.get_label_id_map()
+        self.id_label_map = self.get_id_label_map()
         random.seed(seed)
 
     def build_train_set(self, subset=None):
@@ -37,20 +36,20 @@ class TrainSetBuilder:
         :return:
         """
         keys = list(self.label_id_map.keys())
-        for folder in self.label_path_map:
+        for label_name_folder in self.label_path_map:
             #print(f"Copying {folder} ann files to {self.ann_out_folder}...")
-            labels_folder = os.path.join(self.label_path_map[folder], "labels")
-            images_folder = os.path.join(self.label_path_map[folder], "images")
+            labels_folder = os.path.join(self.label_path_map[label_name_folder], "labels")
+            images_folder = os.path.join(self.label_path_map[label_name_folder], "images")
 
             #gets image and label paths, toggle subset param for random subset from each folder
             image_file_paths, label_file_paths = self.get_image_and_label_paths(images_folder,
                                                                                 labels_folder,
                                                                                 subset=subset)
             #rename and copy label files
-            self.rename_copy_label_files(label_file_paths, folder, keys)
+            self.rename_copy_label_files(label_file_paths, label_name_folder)
 
             #copy_image_files
-            self.copy_image_paths(image_file_paths, folder)
+            self.copy_image_paths(image_file_paths, label_name_folder)
 
     def copy_image_paths(self, image_file_paths, current_folder):
       print(f"Copying {len(image_file_paths)} {current_folder} image files to {self.image_out_folder}...\n#####")
@@ -72,42 +71,34 @@ class TrainSetBuilder:
 
       return image_file_paths, label_file_paths
 
-    def rename_copy_label_files(self, label_file_paths, current_folder, keys):
+    def rename_copy_label_files(self, label_file_paths, label_name_folder):
+        """
+        here we rewrite the annotation based on the label folders passed.
+        """
       #copy files
-      if len(keys) > 1:
-          label_key = self.remove_numbers(current_folder)
-      else:
-          label_key = keys[0]
+      # if len(keys) > 1:
+      #     label_key = self.remove_numbers(label_name_folder)
+      # else:
+      #     label_key = keys[0]
 
-      print(f'#####\nFound {len(label_file_paths)} {current_folder} files'
-            f'\nRenaming class id to {self.label_id_map[label_key]}\n'
+        print(f'#####\nFound {len(label_file_paths)} {label_name_folder} files'
+            f'\nRenaming class id to {self.label_id_map[label_name_folder]}\n'
             f'copying to {self.ann_out_folder}')
 
-      for label_path in label_file_paths:
+        for label_path in label_file_paths:
           outpath = os.path.join(self.ann_out_folder, os.path.basename(label_path))
-          self.rename_first_element(label_path, self.label_id_map[label_key], outpath)
+          self.rename_first_element(label_path, self.label_id_map[label_name_folder], outpath)
 
-    def build_label_id_map(self):
+    def get_id_label_map(self):
+        return {i: label for i, label in enumerate(self.classes)}
+
+    def get_label_id_map(self):
         """
-        Builds a mapping between labels and their IDs using the train folders dictionary.
-
         Returns:
         - label_id_map: Dictionary containing the label-to-ID mapping.
         """
-        label_id_map = {}
-        for index, folder_label in enumerate(self.label_path_map):
-            if self.single_class:
-                label_id_map[self.single_class] = 0
-            else:
-                # Remove numbers from the label
-                label = self.remove_numbers(folder_label)
-                label_id_map[label] = index
-
-        # If numbers are found, ensure values increment by one
-        for index, key in enumerate(label_id_map.keys()):
-            label_id_map[key] = index
-
-        return label_id_map
+        # Generate label-to-ID map
+        return {label: i for i, label in enumerate(self.classes)}
 
     def split(self, split_folder=None, train_ratio=.7, val_ratio=.2, test_ratio=.1):
         if not split_folder:
@@ -128,7 +119,16 @@ class TrainSetBuilder:
         :param split_folder: where our train/val/test default is None
         :return:
         """
-        return write_data_yaml_file(self.class_labels, outdir, dataset_folder=dataset_folder)
+        return write_data_yaml_file(self.classes, outdir, dataset_folder=dataset_folder)
+
+    def get_label_path_map(self):
+      train_folders_dict = {}
+      for folder in self.train_folders:
+        if folder != '.ipynb_checkpoints':
+          label = os.path.basename(folder)
+          train_folders_dict[label] = folder
+
+      return train_folders_dict
 
     @staticmethod
     def rename_first_element(txt_file, class_id, output_path):
@@ -145,15 +145,7 @@ class TrainSetBuilder:
         with open(output_path, 'w') as file:
             file.write('\n'.join(renamed_lines))
 
-    @staticmethod
-    def get_label_path_map(train_folders):
-      train_folders_dict = {}
-      for folder in train_folders:
-        if folder != '.ipynb_checkpoints':
-          label = os.path.basename(folder)
-          train_folders_dict[label] = folder
 
-      return train_folders_dict
 
     @staticmethod
     def remove_numbers(string):
